@@ -3,9 +3,22 @@ import "./Joke.css";
 
 /** A single joke, along with vote up/down buttons. */
 function Joke({ id, vote, votes, text, locked, toggleLock }) {
+
+
+  let lockBtn = locked
+    ? <button onClick={(evt) => toggleLock(id)}>
+      <i className="fas fa-lock" />
+      </button>
+    : <button onClick={(evt) => toggleLock(id)}>
+      <i className="fas fa-lock-open" />
+      </button>
+
   return (
     <div className="Joke">
       <div className="Joke-votearea">
+
+        {lockBtn}
+        
         <button onClick={(evt) => vote(id, +1)}>
           <i className="fas fa-thumbs-up" />
         </button>

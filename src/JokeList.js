@@ -17,7 +17,10 @@ function JokeList({ numJokesToGet = 5 }) {
       async function getJokes() {
         try {
           // load jokes one at a time, adding not-yet-seen jokes
-          let newJokes = jokes.filter(j => j.locked);
+          let newJokes = [...jokes];
+          console.log("newJokes = ", newJokes);
+          console.log("jokes = ", jokes);
+
           let seenJokes = new Set();
 
           while (newJokes.length < numJokesToGet) {
@@ -39,7 +42,7 @@ function JokeList({ numJokesToGet = 5 }) {
           console.error(err);
         }
       }
-      if (isLoading && !jokes[0]) getJokes();
+      if (isLoading && jokes.length < numJokesToGet) getJokes();
       setIsLoading(false);
     },
     [isLoading, numJokesToGet]
@@ -47,7 +50,7 @@ function JokeList({ numJokesToGet = 5 }) {
 
   /* empty joke list, set to loading state to true */
   function generateNewJokes() {
-    setJokes([]);
+    setJokes(jokes.filter((j) => j.locked));
     setIsLoading(true);
   }
 
@@ -82,14 +85,15 @@ function JokeList({ numJokesToGet = 5 }) {
       </button>
 
       {sortedJokes.map((j) => (
-        <Joke 
-          text={j.joke} 
-          key={j.id} 
-          id={j.id} 
-          votes={j.votes} 
+        <Joke
+          text={j.joke}
+          key={j.id}
+          id={j.id}
+          votes={j.votes}
           vote={vote}
           locked={j.locked}
-          toggleLock={toggleLock} />
+          toggleLock={toggleLock}
+        />
       ))}
     </div>
   );
