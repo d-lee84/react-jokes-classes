@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Joke from "./Joke";
 import "./JokeList.css";
@@ -40,15 +40,13 @@ function JokeList({ numJokesToGet = 5 }) {
       }
       if (isLoading) getJokes();
     },
-    [isLoading]
+    [isLoading, numJokesToGet]
   );
 
   /* empty joke list, set to loading state to true */
   function generateNewJokes() {
     setJokes([]);
-    // this.setState({ isLoading: true });
     setIsLoading(true);
-    // this.getJokes();
   }
 
   /* change vote for this id by delta (+1 or -1) */
