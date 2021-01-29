@@ -2,7 +2,7 @@ import React from "react";
 import "./Joke.css";
 
 /** A single joke, along with vote up/down buttons. */
-function Joke({ id, vote, votes, text }) {
+function Joke({ id, vote, votes, text, locked, toggleLock }) {
   return (
     <div className="Joke">
       <div className="Joke-votearea">

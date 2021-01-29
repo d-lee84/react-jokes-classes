@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Joke from "./Joke";
+import useLocalStorage from "./useLocalStorage";
 import "./JokeList.css";
 
 /** List of jokes. */
 
 function JokeList({ numJokesToGet = 5 }) {
-  const [jokes, setJokes] = useState([]);
+  const [jokes, setJokes] = useLocalStorage("jokes", []);
   const [isLoading, setIsLoading] = useState(true);
 
   /* at mount, get jokes */
@@ -16,7 +17,7 @@ function JokeList({ numJokesToGet = 5 }) {
       async function getJokes() {
         try {
           // load jokes one at a time, adding not-yet-seen jokes
-          let newJokes = [];
+          let newJokes = jokes.filter(j => j.locked);
           let seenJokes = new Set();
 
           while (newJokes.length < numJokesToGet) {
@@ -27,7 +28,7 @@ function JokeList({ numJokesToGet = 5 }) {
 
             if (!seenJokes.has(joke.id)) {
               seenJokes.add(joke.id);
-              newJokes.push({ ...joke, votes: 0 });
+              newJokes.push({ ...joke, votes: 0, locked: false });
             } else {
               console.log("duplicate found!");
             }
@@ -38,7 +39,8 @@ function JokeList({ numJokesToGet = 5 }) {
           console.error(err);
         }
       }
-      if (isLoading) getJokes();
+      if (isLoading && !jokes[0]) getJokes();
+      setIsLoading(false);
     },
     [isLoading, numJokesToGet]
   );
@@ -53,6 +55,12 @@ function JokeList({ numJokesToGet = 5 }) {
   function vote(id, delta) {
     setJokes((jokes) =>
       jokes.map((j) => (j.id === id ? { ...j, votes: j.votes + delta } : j))
+    );
+  }
+
+  function toggleLock(id) {
+    setJokes((jokes) =>
+      jokes.map((j) => (j.id === id ? { ...j, locked: !j.locked } : j))
     );
   }
 
@@ -74,7 +82,14 @@ function JokeList({ numJokesToGet = 5 }) {
       </button>
 
       {sortedJokes.map((j) => (
-        <Joke text={j.joke} key={j.id} id={j.id} votes={j.votes} vote={vote} />
+        <Joke 
+          text={j.joke} 
+          key={j.id} 
+          id={j.id} 
+          votes={j.votes} 
+          vote={vote}
+          locked={j.locked}
+          toggleLock={toggleLock} />
       ))}
     </div>
   );
