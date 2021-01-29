@@ -1,62 +1,47 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Joke from "./Joke";
 import "./JokeList.css";
 
 /** List of jokes. */
 
-class JokeList extends Component {
-  static defaultProps = {
-    numJokesToGet: 5
-  };
-
-  constructor(props) {
-    super(props);
-    this.state = {
-      jokes: [],
-      isLoading: true
-    };
-
-    this.generateNewJokes = this.generateNewJokes.bind(this);
-    this.vote = this.vote.bind(this);
-  }
+function JokeList({numJokesToGet=5}) {
+  const [jokes, setJokes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   /* at mount, get jokes */
-
-  componentDidMount() {
-    this.getJokes();
-  }
-
-  /* retrieve jokes from API */
-
-  async getJokes() {
-    try {
-      // load jokes one at a time, adding not-yet-seen jokes
-      let jokes = [];
-      let seenJokes = new Set();
-
-      while (jokes.length < this.props.numJokesToGet) {
-        let res = await axios.get("https://icanhazdadjoke.com", {
-          headers: { Accept: "application/json" }
-        });
-        let { ...joke } = res.data;
-
-        if (!seenJokes.has(joke.id)) {
-          seenJokes.add(joke.id);
-          jokes.push({ ...joke, votes: 0 });
-        } else {
-          console.log("duplicate found!");
+  useEffect(function getJokesOnMount() {
+    /* retrieve jokes from API */
+    async function getJokes() {
+      try {
+        // load jokes one at a time, adding not-yet-seen jokes
+        let newJokes = [];
+        let seenJokes = new Set();
+  
+        while (newJokes.length < numJokesToGet) {
+          let res = await axios.get("https://icanhazdadjoke.com", {
+            headers: { Accept: "application/json" }
+          });
+          let { ...joke } = res.data;
+  
+          if (!seenJokes.has(joke.id)) {
+            seenJokes.add(joke.id);
+            newJokes.push({ ...joke, votes: 0 });
+          } else {
+            console.log("duplicate found!");
+          }
         }
+        setJokes(newJokes);
+        setIsLoading(false);
+      } catch (err) {
+        console.error(err);
       }
-
-      this.setState({ jokes, isLoading: false });
-    } catch (err) {
-      console.error(err);
     }
-  }
+    if(isLoading) getJokes();
+  }, [isLoading]);
+  
 
   /* empty joke list, set to loading state, and then call getJokes */
-
   generateNewJokes() {
     this.setState({ isLoading: true});
     this.getJokes();
@@ -72,39 +57,36 @@ class JokeList extends Component {
     }));
   }
 
-  /* render: either loading spinner or list of sorted jokes. */
-
-  render() {
-    let sortedJokes = [...this.state.jokes].sort((a, b) => b.votes - a.votes);
-    if (this.state.isLoading) {
-      return (
-        <div className="loading">
-          <i className="fas fa-4x fa-spinner fa-spin" />
-        </div>
-      )
-    }
-
+  /* Either loading spinner or list of sorted jokes. */
+  let sortedJokes = [...jokes].sort((a, b) => b.votes - a.votes);
+  if (isLoading) {
     return (
-      <div className="JokeList">
-        <button
-          className="JokeList-getmore"
-          onClick={this.generateNewJokes}
-        >
-          Get New Jokes
-        </button>
-
-        {sortedJokes.map(j => (
-          <Joke
-            text={j.joke}
-            key={j.id}
-            id={j.id}
-            votes={j.votes}
-            vote={this.vote}
-          />
-        ))}
+      <div className="loading">
+        <i className="fas fa-4x fa-spinner fa-spin" />
       </div>
-    );
+    )
   }
+
+  return (
+    <div className="JokeList">
+      <button
+        className="JokeList-getmore"
+        onClick={this.generateNewJokes}
+      >
+        Get New Jokes
+      </button>
+
+      {sortedJokes.map(j => (
+        <Joke
+          text={j.joke}
+          key={j.id}
+          id={j.id}
+          votes={j.votes}
+          vote={vote}
+        />
+      ))}
+    </div>
+  );
 }
 
 export default JokeList;
